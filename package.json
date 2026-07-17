@@ -1,10 +1,13 @@
 {
-  "name": "@neteasecloudmusicapienhanced/api",
+  "name": "heartide-api",
   "version": "4.37.0",
-  "description": "全网最全的网易云音乐API接口 || A revival project for NeteaseCloudMusicApi Node.js Services (Half Refactor & Enhanced) || 网易云音乐 API 备份 + 增强 || 本项目自原版v4.28.0版本后开始自行维护",
+  "description": "Heartide backend based on HotKin/api-enhanced with service-level request authentication",
   "scripts": {
     "dev": "nodemon app.js",
     "start": "node app.js",
+    "start:lan": "HOST=0.0.0.0 PORT=3000 node app.js",
+    "sign": "node scripts/sign-url.js",
+    "test:heartide": "node --test heartide/*.test.js",
     "test": "mocha -r intelli-espower-loader -t 60000 server.test.js main.test.js --exit",
     "lint": "eslint \"**/*.{js,ts}\"",
     "lint-fix": "eslint --fix \"**/*.{js,ts}\"",

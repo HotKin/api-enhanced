@@ -11,6 +11,10 @@ const fileUpload = require('express-fileupload')
 const decode = require('safe-decode-uri-component')
 const logger = require('./util/logger.js')
 const { APP_CONF } = require('./util/config.json')
+const {
+  createHeartideAuthMiddleware,
+  redactRequestUrl,
+} = require('./heartide/auth')
 
 /**
  * The version check result.
@@ -220,6 +224,17 @@ async function constructServer(moduleDefs) {
     req.method === 'OPTIONS' ? res.status(204).end() : next()
   })
 
+  app.get('/health', (_, res) => {
+    res.status(200).send({
+      code: 200,
+      service: 'heartide-api',
+      upstream: packageJSON.version,
+      auth: process.env.HEARTIDE_AUTH_ENABLED === 'false' ? 'off' : 'on',
+    })
+  })
+
+  app.use(createHeartideAuthMiddleware())
+
   /**
    * Cookie Parser
    */
@@ -329,7 +344,9 @@ async function constructServer(moduleDefs) {
         })
         const displayCrypto = usedCrypto || (APP_CONF.encrypt ? 'eapi' : 'api')
         logger.info(
-          `Request Success: [${displayCrypto}] ${decode(req.originalUrl)}`,
+          `Request Success: [${displayCrypto}] ${redactRequestUrl(
+            decode(req.originalUrl),
+          )}`,
         )
 
         // 夹带私货部分：如果开启了通用解锁，并且是获取歌曲URL的接口，则尝试解锁（如果需要的话）ヾ(≧▽≦*)o
@@ -384,7 +401,7 @@ async function constructServer(moduleDefs) {
 
         res.status(moduleResponse.status).send(moduleResponse.body)
       } catch (/** @type {*} */ moduleResponse) {
-        logger.error(`${decode(req.originalUrl)}`, {
+        logger.error(`${redactRequestUrl(decode(req.originalUrl))}`, {
           status: moduleResponse.status,
           body: moduleResponse.body,
         })
