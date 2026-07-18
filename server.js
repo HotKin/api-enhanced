@@ -238,7 +238,8 @@ async function constructServer(moduleDefs) {
     })
   })
 
-  app.use(createHeartideAuthMiddleware())
+  // HMAC 服务鉴权只作用于 /api/* 业务接口；非 /api 路径不进此中间件
+  app.use('/api', createHeartideAuthMiddleware())
 
   /**
    * Cookie Parser
@@ -302,7 +303,7 @@ async function constructServer(moduleDefs) {
 
   for (const moduleDef of moduleDefinitions) {
     // Register the route.
-    app.all(moduleDef.route, async (req, res) => {
+    app.all(`/api${moduleDef.route}`, async (req, res) => {
       ;[req.query, req.body].forEach((item) => {
         // item may be undefined (some environments / middlewares).
         // Guard access to avoid "Cannot read properties of undefined (reading 'cookie')".
@@ -428,6 +429,11 @@ async function constructServer(moduleDefs) {
       }
     })
   }
+
+  // 兜底：非 /api 业务接口、非 doc/静态、非 /health 的路径统一返回 JSON 404
+  app.use((req, res) => {
+    res.status(404).send({ code: 404, msg: 'Not found' })
+  })
 
   return app
 }
