@@ -213,6 +213,10 @@ function renderLogin(res, config, errorMessage = '') {
 </html>`)
 }
 
+function missingConfigMessage() {
+  return '管理员账号未配置，请设置 HEARTIDE_ADMIN_USERNAME、HEARTIDE_ADMIN_PASSWORD_SHA256（或 HEARTIDE_ADMIN_PASSWORD）和 HEARTIDE_ADMIN_SESSION_SECRET。'
+}
+
 function renderMissingConfig(res) {
   res.statusCode = 503
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
@@ -272,11 +276,6 @@ function createHeartideAdminAuthMiddleware() {
       return
     }
 
-    if (!isConfigured(config)) {
-      renderMissingConfig(res)
-      return
-    }
-
     if (req.path === config.logoutPath) {
       clearSessionCookie(res)
       redirect(res, config.loginPath)
@@ -284,11 +283,19 @@ function createHeartideAdminAuthMiddleware() {
     }
 
     if (req.path === config.loginPath && req.method === 'GET') {
-      renderLogin(res, config)
+      renderLogin(
+        res,
+        config,
+        isConfigured(config) ? '' : missingConfigMessage(),
+      )
       return
     }
 
     if (req.path === config.loginPath && req.method === 'POST') {
+      if (!isConfigured(config)) {
+        renderLogin(res, config, missingConfigMessage())
+        return
+      }
       if (isLoginRateLimited(req)) {
         renderLogin(res, config, '登录尝试过多，请稍后再试。')
         return
@@ -313,6 +320,15 @@ function createHeartideAdminAuthMiddleware() {
         return
       }
       renderLogin(res, config, '账号或密码错误。')
+      return
+    }
+
+    if (!isConfigured(config)) {
+      if (wantsHtml(req)) {
+        redirect(res, config.loginPath)
+        return
+      }
+      renderMissingConfig(res)
       return
     }
 
