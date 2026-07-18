@@ -15,6 +15,9 @@ const {
   createHeartideAuthMiddleware,
   redactRequestUrl,
 } = require('./heartide/auth')
+const {
+  createHeartideAdminAuthMiddleware,
+} = require('./heartide/adminAuth')
 
 /**
  * The version check result.
@@ -195,6 +198,8 @@ async function constructServer(moduleDefs) {
   const { CORS_ALLOW_ORIGIN } = process.env
   const allowOrigins = parseCorsAllowOrigins(CORS_ALLOW_ORIGIN)
   app.set('trust proxy', true)
+
+  app.use(createHeartideAdminAuthMiddleware())
 
   /**
    * Serving static files

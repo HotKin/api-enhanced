@@ -12,6 +12,7 @@ This project is a Heartide-specific backend fork based on `HotKin/api-enhanced`.
 ## Local Changes
 
 - Added `heartide/auth.js` for service-level HMAC request verification.
+- Added `heartide/adminAuth.js` for environment-configured account login around public docs/static pages.
 - Added `/health` for deployment checks.
 - Added `scripts/sign-url.js` for local curl/smoke testing.
 - Redacted sensitive query parameters in request logs.
